@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { UserNode, Edge } from '@/lib/types';
 import { clusterByWeight, applyFilters } from '@/lib/graph';
 import { countAnchorsFollowing } from '@/lib/calculations';
@@ -27,7 +27,7 @@ export default function NetworkGraph({
   }>({});
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
 
-  const toggleUserSelection = (username: string) => {
+  const toggleUserSelection = useCallback((username: string) => {
     setSelectedUsers((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(username)) {
@@ -37,7 +37,7 @@ export default function NetworkGraph({
       }
       return newSet;
     });
-  };
+  }, []);
 
   const clustered = useMemo(() => {
     return clusterByWeight(users, anchorThreshold);
@@ -55,16 +55,28 @@ export default function NetworkGraph({
     };
   }, [clustered, filters]);
 
+  // Memoize anchor counts to avoid recalculating on every render
+  const anchorCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    
+    // Calculate counts for all visible users
+    [...filtered.anchors, ...filtered.highWeight, ...filtered.longTail].forEach((user) => {
+      counts.set(user.username, countAnchorsFollowing(user.username, edges, anchorUsernames));
+    });
+    
+    return counts;
+  }, [filtered, edges, anchorUsernames]);
+
   const totalVisible =
     filtered.anchors.length + filtered.highWeight.length + filtered.longTail.length;
 
   const getAnchorCount = (username: string): number => {
-    return countAnchorsFollowing(username, edges, anchorUsernames);
+    return anchorCounts.get(username) ?? 0;
   };
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <div className="mb-6 p-4 bg-gray-50 border border-gray-200">
         <h2 className="text-xl font-bold mb-2">Analysis Results</h2>
         <div className="flex gap-6 text-sm">
           <div>
@@ -95,14 +107,14 @@ export default function NetworkGraph({
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-xl font-bold">Anchors</h3>
-                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">
+                <span className="px-3 py-1 bg-purple-100 text-purple-700 text-sm font-semibold">
                   {filtered.anchors.length} users
                 </span>
               </div>
               <p className="text-sm text-gray-600 mb-4">
                 Followed by {anchorThreshold}+ seeds (~40% of seeds)
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-0">
                 {filtered.anchors.map((user) => (
                   <UserNodeComponent
                     key={user.username}
@@ -120,14 +132,14 @@ export default function NetworkGraph({
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-xl font-bold">High Weight</h3>
-                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold">
                   {filtered.highWeight.length} users
                 </span>
               </div>
               <p className="text-sm text-gray-600 mb-4">
                 Followed by 2-{anchorThreshold - 1} seeds
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-0">
                 {filtered.highWeight.map((user) => (
                   <UserNodeComponent
                     key={user.username}
@@ -145,14 +157,14 @@ export default function NetworkGraph({
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-xl font-bold">Long Tail</h3>
-                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold">
+                <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-semibold">
                   {filtered.longTail.length} users
                 </span>
               </div>
               <p className="text-sm text-gray-600 mb-4">
                 Other users with weight ≥ 2
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-0">
                 {filtered.longTail.map((user) => (
                   <UserNodeComponent
                     key={user.username}

@@ -13,14 +13,14 @@ export default function EstimationPreview({
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+      <div className="bg-blue-50 border border-blue-200 p-6">
         <h3 className="text-lg font-semibold mb-4">Estimation Preview</h3>
 
         <div className="space-y-2 mb-4">
           {estimates.map((est) => (
             <div
               key={est.username}
-              className="flex justify-between items-center p-2 bg-white rounded"
+              className="flex justify-between items-center p-2 bg-white"
             >
               <span className="font-medium">@{est.username}</span>
               {est.error ? (

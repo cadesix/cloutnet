@@ -9,7 +9,7 @@ interface UserTooltipProps {
 export default function UserTooltip({ user, anchorCount, position }: UserTooltipProps) {
   return (
     <div
-      className="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-4 max-w-sm pointer-events-none"
+      className="fixed z-50 bg-white border border-gray-300 shadow-lg p-4 max-w-sm pointer-events-none"
       style={{
         left: `${position.x + 10}px`,
         top: `${position.y + 10}px`,
@@ -40,7 +40,7 @@ export default function UserTooltip({ user, anchorCount, position }: UserTooltip
             )}
           </div>
           {user.isAnchor && (
-            <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full mt-1">
+            <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 text-xs mt-1">
               Anchor
             </span>
           )}
@@ -52,10 +52,6 @@ export default function UserTooltip({ user, anchorCount, position }: UserTooltip
       )}
 
       <div className="space-y-1 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-500">Seed Weight:</span>
-          <span className="font-medium">{user.seedWeight}</span>
-        </div>
         <div className="flex justify-between">
           <span className="text-gray-500">Anchors following:</span>
           <span className="font-medium">{anchorCount}</span>
@@ -77,7 +73,7 @@ export default function UserTooltip({ user, anchorCount, position }: UserTooltip
             {user.followedBySeeds.map((seed) => (
               <span
                 key={seed}
-                className="px-2 py-0.5 bg-gray-100 rounded"
+                className="px-2 py-0.5 bg-gray-100"
               >
                 @{seed}
               </span>

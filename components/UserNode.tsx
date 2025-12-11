@@ -41,7 +41,7 @@ export default function UserNode({ user, anchorCount, isSelected, onToggleSelect
   return (
     <>
       <div
-        className="relative group cursor-pointer"
+        className="relative group cursor-pointer -ml-[1px] -mt-[1px]"
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -49,10 +49,10 @@ export default function UserNode({ user, anchorCount, isSelected, onToggleSelect
       >
         <div
           className={`
-            flex flex-col items-center p-3 rounded-lg transition-all
-            ${isSelected ? 'ring-4 ring-green-400 ring-offset-2' : ''}
-            ${user.isAnchor ? 'bg-purple-100 border-2 border-purple-400' : 'bg-gray-100 border border-gray-300'}
-            hover:shadow-lg hover:scale-105
+            flex flex-col items-center p-3 transition-all duration-200
+            ${isSelected ? 'bg-gray-100' : 'bg-white'}
+            ${user.isAnchor ? 'border-2 border-purple-400' : 'border border-gray-300'}
+            hover:brightness-95
           `}
         >
           {user.profilePicUrl ? (
@@ -74,7 +74,7 @@ export default function UserNode({ user, anchorCount, isSelected, onToggleSelect
             <div className="flex items-center justify-center gap-1 mt-1">
               <span
                 className={`
-                  inline-block px-2 py-0.5 rounded-full text-xs font-semibold
+                  inline-block px-2 py-0.5 text-xs font-semibold
                   ${user.isAnchor ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'}
                 `}
               >

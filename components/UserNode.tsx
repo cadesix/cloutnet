@@ -7,9 +7,11 @@ import UserTooltip from './UserTooltip';
 interface UserNodeProps {
   user: UserNodeType;
   anchorCount: number;
+  isSelected?: boolean;
+  onToggleSelect?: (username: string) => void;
 }
 
-export default function UserNode({ user, anchorCount }: UserNodeProps) {
+export default function UserNode({ user, anchorCount, isSelected, onToggleSelect }: UserNodeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -26,6 +28,16 @@ export default function UserNode({ user, anchorCount }: UserNodeProps) {
     setShowTooltip(false);
   };
 
+  const handleClick = () => {
+    // Toggle selection
+    if (onToggleSelect) {
+      onToggleSelect(user.username);
+    }
+    
+    // Open Instagram profile in new tab
+    window.open(`https://www.instagram.com/${user.username}/`, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <>
       <div
@@ -33,10 +45,12 @@ export default function UserNode({ user, anchorCount }: UserNodeProps) {
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
       >
         <div
           className={`
             flex flex-col items-center p-3 rounded-lg transition-all
+            ${isSelected ? 'ring-4 ring-green-400 ring-offset-2' : ''}
             ${user.isAnchor ? 'bg-purple-100 border-2 border-purple-400' : 'bg-gray-100 border border-gray-300'}
             hover:shadow-lg hover:scale-105
           `}

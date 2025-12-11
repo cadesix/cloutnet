@@ -18,6 +18,7 @@ export interface SavedAnalysis {
   id: string;
   timestamp: number;
   seeds: string[];
+  edges: Edge[];
   results: UserNode[];
   anchorThreshold: number;
 }

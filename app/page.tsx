@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { AnalysisState, Edge, UserNode } from '@/lib/types';
+import type { AnalysisState, Edge, UserNode, SavedAnalysis } from '@/lib/types';
 import { getProfileEstimates, scrapeFollowing, scrapeProfiles } from './actions';
 import {
   computeSeedWeights,
@@ -9,7 +9,7 @@ import {
   calculateAnchorThreshold,
 } from '@/lib/calculations';
 import { markAnchors } from '@/lib/graph';
-import { saveAnalysis } from '@/lib/storage';
+import { saveAnalysis, exportAnalysis } from '@/lib/storage';
 import SeedInput from '@/components/SeedInput';
 import EstimationPreview from '@/components/EstimationPreview';
 import ConfirmationGate from '@/components/ConfirmationGate';
@@ -53,6 +53,19 @@ export default function Home() {
       estimates: result.data!,
       totalEstimate,
     }));
+  };
+
+  const handleImport = (analysis: SavedAnalysis) => {
+    setState({
+      phase: 'complete',
+      seeds: analysis.seeds,
+      estimates: [],
+      totalEstimate: 0,
+      edges: analysis.edges || [],
+      filteredUsers: [],
+      finalResults: analysis.results,
+      anchorThreshold: analysis.anchorThreshold,
+    });
   };
 
   const handleConfirm = async () => {
@@ -127,7 +140,7 @@ export default function Home() {
     const anchorThreshold = calculateAnchorThreshold(state.seeds.length);
     const finalResults = markAnchors(enrichedUsers, anchorThreshold);
 
-    saveAnalysis(state.seeds, finalResults, anchorThreshold);
+    saveAnalysis(state.seeds, edges, finalResults, anchorThreshold);
 
     setState((prev) => ({
       ...prev,
@@ -135,6 +148,15 @@ export default function Home() {
       finalResults,
       anchorThreshold,
     }));
+  };
+
+  const handleExport = () => {
+    exportAnalysis(
+      state.seeds,
+      state.edges,
+      state.finalResults,
+      state.anchorThreshold
+    );
   };
 
   const handleCancel = () => {
@@ -157,15 +179,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">CloutNet</h1>
-          <p className="text-lg text-gray-600">
-            Discover influential accounts by analyzing Instagram networks
-          </p>
-        </header>
-
         {state.phase === 'input' && (
-          <SeedInput onSubmit={handleSeedSubmit} />
+          <SeedInput onSubmit={handleSeedSubmit} onImport={handleImport} />
         )}
 
         {state.phase === 'estimation' && (
@@ -191,22 +206,20 @@ export default function Home() {
         <ProgressTracker phase={state.phase} />
 
         {state.phase === 'complete' && (
-          <div className="space-y-6">
+          <>
             <NetworkGraph
               users={state.finalResults}
               edges={state.edges}
               anchorThreshold={state.anchorThreshold}
               seeds={state.seeds}
             />
-            <div className="text-center">
-              <button
-                onClick={handleStartOver}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                Start New Analysis
-              </button>
-            </div>
-          </div>
+            <button
+              onClick={handleExport}
+              className="fixed bottom-6 right-6 px-6 py-3 bg-white text-gray-800 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl"
+            >
+              Export as JSON
+            </button>
+          </>
         )}
 
         {state.phase === 'error' && (

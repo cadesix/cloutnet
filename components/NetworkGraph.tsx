@@ -25,6 +25,19 @@ export default function NetworkGraph({
     bioKeyword?: string;
     maxFollowers?: number;
   }>({});
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+
+  const toggleUserSelection = (username: string) => {
+    setSelectedUsers((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(username)) {
+        newSet.delete(username);
+      } else {
+        newSet.add(username);
+      }
+      return newSet;
+    });
+  };
 
   const clustered = useMemo(() => {
     return clusterByWeight(users, anchorThreshold);
@@ -73,13 +86,12 @@ export default function NetworkGraph({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1">
-          <FilterControls onFilterChange={setFilters} />
-        </div>
+      <div className="mb-6">
+        <FilterControls onFilterChange={setFilters} />
+      </div>
 
-        <div className="lg:col-span-3 space-y-6">
-          {filtered.anchors.length > 0 && (
+      <div className="space-y-6">
+        {filtered.anchors.length > 0 && (
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-xl font-bold">Anchors</h3>
@@ -96,6 +108,8 @@ export default function NetworkGraph({
                     key={user.username}
                     user={user}
                     anchorCount={getAnchorCount(user.username)}
+                    isSelected={selectedUsers.has(user.username)}
+                    onToggleSelect={toggleUserSelection}
                   />
                 ))}
               </div>
@@ -119,6 +133,8 @@ export default function NetworkGraph({
                     key={user.username}
                     user={user}
                     anchorCount={getAnchorCount(user.username)}
+                    isSelected={selectedUsers.has(user.username)}
+                    onToggleSelect={toggleUserSelection}
                   />
                 ))}
               </div>
@@ -142,18 +158,19 @@ export default function NetworkGraph({
                     key={user.username}
                     user={user}
                     anchorCount={getAnchorCount(user.username)}
+                    isSelected={selectedUsers.has(user.username)}
+                    onToggleSelect={toggleUserSelection}
                   />
                 ))}
               </div>
             </section>
           )}
 
-          {totalVisible === 0 && (
-            <div className="text-center py-12 text-gray-500">
-              No users match the current filters
-            </div>
-          )}
-        </div>
+        {totalVisible === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            No users match the current filters
+          </div>
+        )}
       </div>
     </div>
   );

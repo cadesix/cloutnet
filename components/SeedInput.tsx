@@ -1,15 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import type { SavedAnalysis } from '@/lib/types';
 
 interface SeedInputProps {
   onSubmit: (usernames: string[]) => void;
+  onImport?: (analysis: SavedAnalysis) => void;
   isLoading?: boolean;
 }
 
-export default function SeedInput({ onSubmit, isLoading }: SeedInputProps) {
+export default function SeedInput({ onSubmit, onImport, isLoading }: SeedInputProps) {
   const [inputs, setInputs] = useState<string[]>(['']);
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (index: number, value: string) => {
     const newInputs = [...inputs];
@@ -69,6 +72,38 @@ export default function SeedInput({ onSubmit, isLoading }: SeedInputProps) {
     }
 
     onSubmit(usernames);
+  };
+
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const analysis: SavedAnalysis = JSON.parse(text);
+
+      // Validate structure
+      if (!analysis.seeds || !analysis.results || !analysis.anchorThreshold) {
+        setError('Invalid analysis file format');
+        return;
+      }
+
+      if (onImport) {
+        onImport(analysis);
+      }
+    } catch (err) {
+      setError('Failed to read file. Please ensure it\'s a valid JSON file.');
+      console.error('Import error:', err);
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -143,6 +178,38 @@ export default function SeedInput({ onSubmit, isLoading }: SeedInputProps) {
           {isLoading ? 'Analyzing...' : 'Analyze Network'}
         </button>
       </form>
+
+      {onImport && (
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gradient-to-br from-blue-50 to-purple-50 text-gray-500">
+                Or
+              </span>
+            </div>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileImport}
+            className="hidden"
+          />
+
+          <button
+            type="button"
+            onClick={handleImportClick}
+            disabled={isLoading}
+            className="mt-4 w-full px-6 py-3 bg-white text-gray-800 border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+          >
+            Import Previous Analysis
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,11 @@
-import type { SavedAnalysis, UserNode } from './types';
+import type { SavedAnalysis, UserNode, Edge } from './types';
 
 const STORAGE_KEY = 'cloutnet_analyses';
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export function saveAnalysis(
   seeds: string[],
+  edges: Edge[],
   results: UserNode[],
   anchorThreshold: number
 ): void {
@@ -14,6 +15,7 @@ export function saveAnalysis(
     id: generateId(),
     timestamp: Date.now(),
     seeds,
+    edges,
     results,
     anchorThreshold,
   };
@@ -22,6 +24,34 @@ export function saveAnalysis(
   const updated = [analysis, ...existing];
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+}
+
+export function exportAnalysis(
+  seeds: string[],
+  edges: Edge[],
+  results: UserNode[],
+  anchorThreshold: number
+): void {
+  const analysis: SavedAnalysis = {
+    id: generateId(),
+    timestamp: Date.now(),
+    seeds,
+    edges,
+    results,
+    anchorThreshold,
+  };
+
+  const dataStr = JSON.stringify(analysis, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `cloutnet-analysis-${Date.now()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 export function loadAnalyses(): SavedAnalysis[] {

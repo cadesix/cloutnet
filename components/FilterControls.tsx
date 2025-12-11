@@ -13,31 +13,29 @@ interface FilterControlsProps {
 export default function FilterControls({ onFilterChange }: FilterControlsProps) {
   const [usernameKeyword, setUsernameKeyword] = useState('');
   const [bioKeyword, setBioKeyword] = useState('');
-  const [maxFollowers, setMaxFollowers] = useState('');
+  const [maxFollowers, setMaxFollowers] = useState<number>(100000);
 
   const handleFilterChange = () => {
     onFilterChange({
       usernameKeyword: usernameKeyword.trim() || undefined,
       bioKeyword: bioKeyword.trim() || undefined,
-      maxFollowers: maxFollowers ? parseInt(maxFollowers) : undefined,
+      maxFollowers: maxFollowers < 100000 ? maxFollowers : undefined,
     });
   };
 
   const handleReset = () => {
     setUsernameKeyword('');
     setBioKeyword('');
-    setMaxFollowers('');
+    setMaxFollowers(100000);
     onFilterChange({});
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">Filters</h3>
-
-      <div className="space-y-4">
-        <div>
+    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="flex-1 min-w-[200px]">
           <label htmlFor="username-filter" className="block text-sm font-medium mb-1">
-            Username contains
+            Username
           </label>
           <input
             id="username-filter"
@@ -47,14 +45,14 @@ export default function FilterControls({ onFilterChange }: FilterControlsProps) 
               setUsernameKeyword(e.target.value);
               setTimeout(handleFilterChange, 300);
             }}
-            placeholder="e.g., tech"
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Filter by username"
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           />
         </div>
 
-        <div>
+        <div className="flex-1 min-w-[200px]">
           <label htmlFor="bio-filter" className="block text-sm font-medium mb-1">
-            Bio contains
+            Bio
           </label>
           <input
             id="bio-filter"
@@ -64,43 +62,41 @@ export default function FilterControls({ onFilterChange }: FilterControlsProps) 
               setBioKeyword(e.target.value);
               setTimeout(handleFilterChange, 300);
             }}
-            placeholder="e.g., founder"
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Filter by bio"
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           />
         </div>
 
-        <div>
+        <div className="flex-1 min-w-[250px]">
           <label htmlFor="followers-filter" className="block text-sm font-medium mb-1">
-            Max followers
+            Max followers: {maxFollowers < 100000 ? maxFollowers.toLocaleString() : 'No limit'}
           </label>
           <input
             id="followers-filter"
-            type="number"
+            type="range"
+            min="0"
+            max="100000"
+            step="1000"
             value={maxFollowers}
             onChange={(e) => {
-              setMaxFollowers(e.target.value);
+              setMaxFollowers(parseInt(e.target.value));
               setTimeout(handleFilterChange, 300);
             }}
-            placeholder="e.g., 10000"
-            min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Show only accounts with fewer followers than this
-          </p>
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>0</span>
+            <span>50k</span>
+            <span>100k</span>
+          </div>
         </div>
 
         <button
           onClick={handleReset}
-          className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors text-sm font-medium"
+          className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors text-sm font-medium"
         >
-          Reset Filters
+          Reset
         </button>
-      </div>
-
-      <div className="mt-4 p-3 bg-blue-50 rounded text-sm text-gray-600">
-        <p className="font-medium mb-1">Note:</p>
-        <p>Filters only hide nodes visually. Anchor calculations remain unchanged.</p>
       </div>
     </div>
   );

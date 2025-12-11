@@ -5,7 +5,7 @@ import type {
   ActorRunStatus,
 } from './types';
 
-const FOLLOWING_ACTOR_ID = 'apify/instagram-profile-scraper';
+const FOLLOWING_ACTOR_ID = 'louisdeconinck/instagram-following-scraper';
 const PROFILE_ACTOR_ID = 'apify/instagram-profile-scraper';
 
 export class ApifyService {
@@ -20,30 +20,42 @@ export class ApifyService {
       throw new Error('Usernames array cannot be empty');
     }
 
+    // Get Instagram cookies from environment variable
+    const cookies = process.env.INSTAGRAM_COOKIES;
+    if (!cookies) {
+      throw new Error('INSTAGRAM_COOKIES environment variable is not set. Please add your Instagram session cookies.');
+    }
+
+    console.log(`[scrapeFollowing] Scraping following lists for ${usernames.length} users`);
+
     const run = await this.client.actor(FOLLOWING_ACTOR_ID).call({
-      startUrls: usernames.map((u) => ({ url: `https://www.instagram.com/${u}/` })),
-      resultsType: 'following',
-      resultsLimit: 1000,
+      cookies: cookies,
+      usernames: usernames,
     });
 
     const { items } = await this.client.dataset(run.defaultDatasetId).listItems();
+    
+    console.log(`[scrapeFollowing] Received ${items.length} total following records`);
+    if (items.length > 0) {
+      console.log('[scrapeFollowing] Sample item:', JSON.stringify(items[0], null, 2));
+    }
 
     const edges: ApifyFollowingResult[] = [];
+
+    // Parse the response format: { username: "...", followed_by: "...", ... }
     for (const item of items) {
-      if (item.following && Array.isArray(item.following)) {
-        const ownerUsername = String((item as any).username || '');
-        for (const followed of item.following) {
-          const username = typeof followed === 'string' 
-            ? followed 
-            : (followed as any)?.username || String(followed);
-          edges.push({
-            ownerUsername,
-            username,
-          });
-        }
+      const followedUsername = (item as any).username;
+      const seedUsername = (item as any).followed_by;
+      
+      if (followedUsername && seedUsername) {
+        edges.push({
+          ownerUsername: String(seedUsername),
+          username: String(followedUsername),
+        });
       }
     }
 
+    console.log(`[scrapeFollowing] Total edges extracted: ${edges.length}`);
     return edges;
   }
 
@@ -53,7 +65,7 @@ export class ApifyService {
     }
 
     const run = await this.client.actor(PROFILE_ACTOR_ID).call({
-      startUrls: usernames.map((u) => ({ url: `https://www.instagram.com/${u}/` })),
+      usernames: usernames,
       resultsType: 'details',
     });
 
@@ -74,7 +86,7 @@ export class ApifyService {
     }
 
     const run = await this.client.actor(PROFILE_ACTOR_ID).call({
-      startUrls: usernames.map((u) => ({ url: `https://www.instagram.com/${u}/` })),
+      usernames: usernames,
       resultsType: 'details',
     });
 
